@@ -13,7 +13,6 @@ if (!connectionString) {
   process.exit(1);
 }
 
-// Notum SSL tengingu við gagnagrunn ef við erum *ekki* í development mode, þ.e.a.s. á local vél
 const ssl = nodeEnv !== 'development' ? { rejectUnauthorized: false } : false;
 
 const pool = new pg.Pool({ connectionString, ssl });
@@ -66,23 +65,18 @@ export async function insert({
   return success;
 }
 
-/**
- * List all registrations from the registration table.
- *
- * @returns {Promise<Array<list>>} Promise, resolved to array of all registrations.
- */
-export async function list() {
+export async function counter() {
   let result = [];
   try {
     const queryResult = await query(
-      'SELECT name, nationalId, comment, anonymous, signed FROM signatures ORDER BY signed DESC',
+      'SELECT COUNT(*) AS count FROM signatures',
     );
 
-    if (queryResult && queryResult.rows) {
+    if (queryResult) {
       result = queryResult.rows;
     }
   } catch (e) {
-    console.error('Error selecting signatures', e);
+    console.error('Error counting signatures', e);
   }
 
   return result;
@@ -91,4 +85,26 @@ export async function list() {
 // Helper to remove pg from the event loop
 export async function end() {
   await pool.end();
+}
+
+export async function selectFromInterval(offset, limit) {
+  const client = await pool.connect();
+
+  try {
+    const q = 'SELECT * FROM signatures ORDER BY id OFFSET $1 LIMIT $2';
+    const res = await client.query(q, [offset, limit]);
+
+    return res.rows;
+  } catch (e) {
+    console.error('Error selecting', e);
+  } finally {
+    client.release();
+  }
+
+  return [];
+}
+
+export async function deleteSigniture(id) {
+  const q = 'DELETE FROM signatures WHERE id = $1';
+  return query(q, id);
 }

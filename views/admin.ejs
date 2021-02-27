@@ -1,0 +1,49 @@
+<%- include('header') -%>
+
+<h1>Undir&shy;skriftar&shy;listi — umsjón</h1>
+
+<div>Innskráður sem: <%= name %></div>
+<a href="/logout">Útskráning</a>
+
+<h3>Fjöldi undirskrifta: <%= counted %></h3>
+
+<% if (registrations.length === 0) { %>
+  <p class="registrations__empty">Engar undirskriftir.</p>
+<% } else { %>
+  <table class="registrations__table" cellpadding="0">
+    <tr>
+      <th>Dags</th>
+      <th>Nafn</th>
+      <th>Athugasemd</th>
+      <th>Eyða</th>
+    </tr>
+    <% registrations.forEach((row) => { %>
+      <tr>
+        <td class="date"><%= formatDate(row.signed) %></td>
+        <td class="name"><%= row.anonymous ? 'Nafnlaust' : row.name %></td>
+        <td class="comment"><%= row.comment %></td>
+        <td class="button">
+          <a href="/<%= row.id %>"><button>Eyða</button></a>
+        </td>
+      </tr>
+    <% }) %>
+    </tr>
+  </table>
+<% } %>
+</section>
+<section class="links">
+<% if(result.links.prev) { %>
+  <a href=<%= result.links.prev.href %>>Fyrri síða </a>
+<% } else { %>
+  <div>Fyrri síða</div>
+<% } %>
+<div>Síða <%= offset+1 %> af <%= limit %></div>
+<% if(result.links.next) { %>
+  <a href=<%= result.links.next.href %>>Næsta síða </a>
+<% } else {%>
+  <div>Næsta síða</div>
+<% } %>
+</section>
+
+
+<%- include('footer') -%>

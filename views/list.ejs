@@ -22,3 +22,16 @@
     </table>
   <% } %>
 </section>
+<section class="links">
+  <% if(result.links.prev) { %>
+    <a href=<%= result.links.prev.href %>>Fyrri síða </a>
+  <% } else { %>
+    <div>Fyrri síða</div>
+  <% } %>
+
+  <% if(result.links.next) { %>
+    <a href=<%= result.links.next.href %>>Næsta síða </a>
+  <% } else {%>
+    <div>Næsta síða</div>
+  <% } %>
+</section>

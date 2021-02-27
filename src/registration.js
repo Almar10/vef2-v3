@@ -1,8 +1,9 @@
 import express from 'express';
 import { body, validationResult } from 'express-validator';
 import xss from 'xss';
+import { router as loginRouter } from './login.js';
 
-import { list, insert } from './db.js';
+import { insert, selectFromInterval } from './db.js';
 
 export const router = express.Router();
 
@@ -25,10 +26,35 @@ async function index(req, res) {
     comment: '',
   };
 
-  const registrations = await list();
+  let { offset = 0, limit = 50 } = req.query;
+  offset = Number(offset);
+  limit = Number(limit);
+
+  const registrations = await selectFromInterval(offset, limit);
+
+  const result = await {
+    links: {
+      self: {
+        href: `http://localhost:3000/?offset=${offset}&limit=${limit}`,
+      },
+    },
+    items: registrations,
+  };
+
+  if (offset > 0) {
+    result.links.prev = await {
+      href: `http://localhost:3000/?offset=${offset - limit}&limit=${limit}`,
+    };
+  }
+
+  if (registrations.length <= limit) {
+    result.links.next = await {
+      href: `http://localhost:3000/?offset=${Number(offset) + limit}&limit=${limit}`,
+    };
+  }
 
   res.render('index', {
-    errors, formData, registrations,
+    errors, formData, registrations, result,
   });
 }
 
@@ -73,7 +99,7 @@ async function validationCheck(req, res, next) {
   const formData = {
     name, nationalId, comment, anonymous,
   };
-  const registrations = await list();
+  const registrations = await selectFromInterval();
 
   const validation = validationResult(req);
 
@@ -116,3 +142,5 @@ router.post(
   sanitizationMiddleware,
   catchErrors(register),
 );
+
+router.use('/', loginRouter);
